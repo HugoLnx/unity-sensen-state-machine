@@ -1,5 +1,5 @@
 {
-    "name": "Unity.com.{{COMPANY}}.{{REPOSITORY_NAME}}.Editor",
+    "name": "Sensen.StateMachine.Editor",
     "references": [],
     "includePlatforms": [
         "Editor"

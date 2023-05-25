@@ -1,7 +1,7 @@
 {
-  "name": "Unity.com.{{COMPANY}}.{{REPOSITORY_NAME}}.Tests",
+  "name": "Sensen.StateMachine.Runtime.Tests",
   "references": [
-    "Unity.com.{{COMPANY}}.{{REPOSITORY_NAME}}"
+    "Sensen.StateMachine.Runtime"
   ],
   "optionalUnityReferences": [
     "TestAssemblies"

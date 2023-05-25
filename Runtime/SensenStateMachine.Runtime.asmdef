@@ -1,5 +1,5 @@
 {
-    "name": "Unity.com.{{COMPANY}}.{{REPOSITORY_NAME}}",
+    "name": "Sensen.StateMachine.Runtime",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

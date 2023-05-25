@@ -1,7 +1,7 @@
 {
-  "name": "Unity.com.{{COMPANY}}.{{REPOSITORY_NAME}}.Editor.Tests",
+  "name": "Sensen.StateMachine.Editor.Tests",
   "references": [
-    "Unity.com.{{COMPANY}}.{{REPOSITORY_NAME}}"
+    "Sensen.StateMachine.Editor"
   ],
   "optionalUnityReferences": [
     "TestAssemblies"
