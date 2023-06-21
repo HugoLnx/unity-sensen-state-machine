@@ -3,7 +3,7 @@ using Unity.VisualScripting;
 namespace SensenToolkit.StateMachine
 {
     public abstract class FsmStateUnit<TMachine, TState> : Unit
-    where TMachine : FsmMachine<TMachine>
+    where TMachine : FsmMachine
     where TState : FsmState
     {
         private ControlInput _enter;
@@ -18,7 +18,7 @@ namespace SensenToolkit.StateMachine
 
         private ControlOutput Enter(Flow flow)
         {
-            FsmMachine.GetFromFlow(flow, ref _machine);
+            FsmMachineFetcher.GetFromFlow(flow, ref _machine);
             _machine.OnEnterState<TState>();
             return null;
         }

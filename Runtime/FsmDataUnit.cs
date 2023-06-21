@@ -8,7 +8,7 @@ using SensenToolkit.StateMachine;
 namespace SensenToolkit.StateMachine
 {
     public abstract class FsmDataUnit<TMachine, TDataComponent> : Unit
-    where TMachine : FsmMachine<TMachine>
+    where TMachine : FsmMachine
     where TDataComponent : MonoBehaviour
     {
         private TMachine _machine;
@@ -18,7 +18,7 @@ namespace SensenToolkit.StateMachine
             foreach (var (property, attr) in GetExposedProperties())
             {
                 ValueOutput(property.PropertyType, attr.Name, (flow) => {
-                    FsmMachine.GetFromFlow(flow, ref _machine);
+                    FsmMachineFetcher.GetFromFlow(flow, ref _machine);
                     MonoBehaviour dataComponent = _machine.GetDataComponent<TDataComponent>();
                     return property.GetValue(dataComponent);
                 });
