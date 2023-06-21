@@ -54,13 +54,15 @@ namespace SensenToolkit.StateMachine
             return state;
         }
 
-        internal MonoBehaviour GetDataComponent(Type type)
+        internal TData GetDataComponent<TData>()
+        where TData : MonoBehaviour
         {
-            if (_dataComponents.TryGetValue(type, out MonoBehaviour dataComponent))
+            Type type = typeof(TData);
+            if (_dataComponents.TryGetValue(type, out MonoBehaviour component))
             {
-                return dataComponent;
+                return (TData) component;
             }
-            dataComponent = GetComponentInChildren(type, includeInactive: true) as MonoBehaviour;
+            TData dataComponent = EnsureComponent<TData>(this, searchChildren: true);
             Assertx.IsNotNull(dataComponent, $"DataComponent {type.Name} wasn't found in StateMachine {GetType().Name}/{gameObject.name}");
             _dataComponents.Add(type, dataComponent);
             return dataComponent;

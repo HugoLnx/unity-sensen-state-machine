@@ -19,7 +19,7 @@ namespace SensenToolkit.StateMachine
             {
                 ValueOutput(property.PropertyType, attr.Name, (flow) => {
                     FsmMachine.GetFromFlow(flow, ref _machine);
-                    MonoBehaviour dataComponent = _machine.GetDataComponent(typeof(TDataComponent));
+                    MonoBehaviour dataComponent = _machine.GetDataComponent<TDataComponent>();
                     return property.GetValue(dataComponent);
                 });
             }
