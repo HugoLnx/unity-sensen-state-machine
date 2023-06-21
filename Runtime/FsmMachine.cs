@@ -10,8 +10,8 @@ using UnityEngine.Assertions;
 
 namespace SensenToolkit.StateMachine
 {
-    public abstract class FsmMachine<T> : MonoBehaviour
-    where T : FsmMachine<T>
+    public abstract class FsmMachine<TMachine> : MonoBehaviour
+    where TMachine : FsmMachine<TMachine>
     {
         public FsmState CurrentState { get; private set; }
         private Dictionary<Type, FsmState> _states;
@@ -27,30 +27,30 @@ namespace SensenToolkit.StateMachine
             }
         }
 
-        public void OnEnterState<TB>()
-        where TB : FsmState
+        public void OnEnterState<TState>()
+        where TState : FsmState
         {
-            FsmState state = GetState<TB>();
+            FsmState state = GetState<TState>();
             state.Enter();
             this.CurrentState = state;
         }
 
-        public void OnExitState<TB>()
-        where TB : FsmState
+        public void OnExitState<TState>()
+        where TState : FsmState
         {
-            States[typeof(TB)].Exit();
+            States[typeof(TState)].Exit();
         }
 
-        private FsmState GetState<TB>()
-        where TB : FsmState
+        private FsmState GetState<TState>()
+        where TState : FsmState
         {
-            if (States.TryGetValue(typeof(TB), out FsmState state))
+            if (States.TryGetValue(typeof(TState), out FsmState state))
             {
                 return state;
             }
-            state = EnsureComponent<TB>(this, searchChildren: true);
+            state = EnsureComponent<TState>(this, searchChildren: true);
             state.Boot();
-            States.Add(typeof(TB), state);
+            States.Add(typeof(TState), state);
             return state;
         }
 
