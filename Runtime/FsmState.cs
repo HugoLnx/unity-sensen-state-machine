@@ -15,19 +15,21 @@ namespace SensenToolkit.StateMachine
         {
             this.enabled = false;
         }
-        public void Enter()
+        public void EnterFrom(FsmState previousState)
         {
             this.IsCurrent = true;
             this.IsEntering = true;
             this.enabled = true;
             OnEnter();
+            OnEnterFrom(previousState);
             this.IsEntering = false;
         }
-        public void Exit()
+        public void ExitTo(FsmState nextState)
         {
             HasAskedToExit = false;
             this.IsExiting = true;
             OnExit();
+            OnExitTo(nextState);
             this.enabled = false;
             this.IsExiting = false;
             this.IsCurrent = false;
@@ -41,6 +43,11 @@ namespace SensenToolkit.StateMachine
         {}
 
         protected virtual void OnExit()
+        {}
+        protected virtual void OnEnterFrom(FsmState previousState)
+        {}
+
+        protected virtual void OnExitTo(FsmState nextState)
         {}
 
     }

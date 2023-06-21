@@ -10,12 +10,29 @@ namespace SensenToolkit.StateMachine
 {
     public abstract class FsmMachine : MonoBehaviour
     {
+        private readonly struct SuperStateRecord
+        {
+            public FsmSuperState SuperState { get; }
+            public VisualScriptingStateData Data { get; }
+            public static readonly SuperStateRecord None = new(null, default);
+
+            public SuperStateRecord(FsmSuperState superState, VisualScriptingStateData data)
+            {
+                SuperState = superState;
+                Data = data;
+            }
+        }
+
+        private Dictionary<Type, FsmState> _states;
+        private bool _isInSuperStateEntry;
+        private readonly Dictionary<Type, MonoBehaviour> _dataComponents = new();
+        private readonly List<Guid> _superStateGuidStack = new();
+        private readonly Dictionary<Guid, SuperStateRecord> _superStates = new();
+
         public FsmState CurrentState { get; private set; }
         public bool CurrentStateHasAskedToExit => CurrentState?.HasAskedToExit == true;
-        private Dictionary<Type, FsmState> _states;
         private Dictionary<Type, FsmState> States
             => _states ??= GetStates();
-        private readonly Dictionary<Type, MonoBehaviour> _dataComponents = new();
 
         protected void Awake()
         {
@@ -25,18 +42,107 @@ namespace SensenToolkit.StateMachine
             }
         }
 
-        public void OnEnterState<TState>()
+        public void TransitToState<TState>(VisualScriptingStateData data)
         where TState : FsmState
         {
+            // Debug.Log($"Transition {CurrentState?.GetType()?.Name} -> {typeof(TState).Name} Title:{data.Title} ParentTitle:{data.ParentTitle} ParentGuid:{data.ParentGuid} Ancestors:{string.Join(" | ", data.AncestorGuids)}");
             FsmState state = GetState<TState>();
-            state.Enter();
-            this.CurrentState = state;
+            bool isEnteringSuperStateEntry = state is FsmSuperState;
+            if (!_isInSuperStateEntry
+                && CurrentState != null
+                && CurrentState is not FsmSuperState)
+            {
+                CurrentState.ExitTo(state);
+            }
+
+            ResolveSuperStates(state, data);
+            if (!isEnteringSuperStateEntry)
+            {
+                state.EnterFrom(CurrentState);
+                this.CurrentState = state;
+            }
+            _isInSuperStateEntry = isEnteringSuperStateEntry;
         }
 
-        public void OnExitState<TState>()
-        where TState : FsmState
+        private void ResolveSuperStates(FsmState nextState, VisualScriptingStateData data)
         {
-            States[typeof(TState)].Exit();
+            int currentDepth = _superStateGuidStack.Count;
+            Guid currentSuperStateGuid = currentDepth > 0 ? _superStateGuidStack[^1] : Guid.Empty;
+            if (data.ParentGuid == currentSuperStateGuid) return;
+            Guid convergenceGuid = FindConvergenceGuid(data);
+            // Debug.Log($"Convergence: {convergenceGuid}");
+            ExitSuperStatesUntil(convergenceGuid, nextState);
+
+            FsmSuperState superState = nextState as FsmSuperState;
+            IEnumerable<Guid> guidsToPush = data.AncestorGuids;
+            if (convergenceGuid != Guid.Empty)
+            {
+                guidsToPush = guidsToPush
+                .SkipWhile(g => g != convergenceGuid)
+                .Skip(1);
+            }
+            PushSuperStatesStack(guidsToPush);
+            if (_superStateGuidStack.Count > 0)
+            {
+                _superStates[_superStateGuidStack[^1]] = new SuperStateRecord(superState, data);
+                EnterTopSuperState();
+                // Debug.Log($"Set super state {_superStateGuidStack[^1]} to {superState}");
+            }
+        }
+
+        private void PushSuperStatesStack(IEnumerable<Guid> guids)
+        {
+            foreach (Guid guid in guids)
+            {
+                // Debug.Log($"Push SuperState {guid}");
+                _superStateGuidStack.Add(guid);
+                _superStates.Add(guid, SuperStateRecord.None);
+            }
+        }
+
+        private Guid FindConvergenceGuid(VisualScriptingStateData data)
+        {
+            if (_superStates.ContainsKey(data.ParentGuid))
+            {
+                return data.ParentGuid;
+            }
+            foreach (Guid ancestorGuid in data.AncestorGuids.Reverse())
+            {
+                if (_superStates.ContainsKey(ancestorGuid))
+                {
+                    return ancestorGuid;
+                }
+            }
+            return Guid.Empty;
+        }
+
+        private void ExitSuperStatesUntil(Guid targetGuid, FsmState nextState)
+        {
+            while (_superStateGuidStack.Count > 0 && _superStateGuidStack[^1] != targetGuid)
+            {
+                ExitTopSuperState(nextState);
+            }
+        }
+
+        private void EnterTopSuperState()
+        {
+            Guid guid = _superStateGuidStack[^1];
+            SuperStateRecord stateRecord = _superStates[guid];
+            if (stateRecord.SuperState != null)
+            {
+                // Debug.Log($"Entering SuperState Guid:{guid} Title:{stateRecord.Data.Title} ParentTitle:{stateRecord.Data.ParentTitle}");
+                stateRecord.SuperState?.EnterFrom(CurrentState);
+            }
+        }
+
+        private void ExitTopSuperState(FsmState nextState)
+        {
+            Guid guid = _superStateGuidStack[^1];
+            SuperStateRecord stateRecord = _superStates[guid];
+            // Debug.Log($"Exiting SuperState Guid:{guid} Title:{stateRecord.Data.Title} ParentTitle:{stateRecord.Data.ParentTitle}");
+            _superStateGuidStack.RemoveAt(_superStateGuidStack.Count - 1);
+            stateRecord.SuperState?.ExitTo(nextState);
+            _superStates.Remove(guid);
         }
 
         internal FsmState GetState<TState>()
