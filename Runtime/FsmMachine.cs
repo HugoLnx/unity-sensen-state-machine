@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using SensenToolkit;
+using static SensenToolkit.Componentsx;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -29,7 +30,7 @@ namespace SensenToolkit.StateMachine
         public void OnEnterState<TB>()
         where TB : FsmState
         {
-            FsmState state = States[typeof(TB)];
+            FsmState state = GetState<TB>();
             state.Enter();
             this.CurrentState = state;
         }
@@ -38,6 +39,19 @@ namespace SensenToolkit.StateMachine
         where TB : FsmState
         {
             States[typeof(TB)].Exit();
+        }
+
+        private FsmState GetState<TB>()
+        where TB : FsmState
+        {
+            if (States.TryGetValue(typeof(TB), out FsmState state))
+            {
+                return state;
+            }
+            state = EnsureComponent<TB>(this, searchChildren: true);
+            state.Boot();
+            States.Add(typeof(TB), state);
+            return state;
         }
 
         internal MonoBehaviour GetDataComponent(Type type)
