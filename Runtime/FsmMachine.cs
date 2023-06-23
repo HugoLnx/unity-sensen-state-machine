@@ -38,7 +38,7 @@ namespace SensenToolkit.StateMachine
             States[typeof(TState)].Exit();
         }
 
-        private FsmState GetState<TState>()
+        internal FsmState GetState<TState>()
         where TState : FsmState
         {
             if (States.TryGetValue(typeof(TState), out FsmState state))
