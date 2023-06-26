@@ -10,29 +10,17 @@ namespace SensenToolkit.StateMachine
     where TMachine : FsmMachine
     where TDataComponent : MonoBehaviour
     {
-        private TMachine _machine;
+        protected TMachine _machine;
         protected override void Definition()
         {
-            Type dataType = typeof(TMachine);
-            foreach (var (property, attr) in GetExposedProperties())
+            Type dataType = typeof(TDataComponent);
+            foreach (var (property, attr) in FsmExposeAttribute.GetExposedProperties<TDataComponent>())
             {
-                ValueOutput(property.PropertyType, attr.Name, (flow) => {
+                ValueOutput(property.PropertyType, attr.Name ?? property.Name, (flow) => {
                     FsmMachineFetcher.GetFromFlow(flow, ref _machine);
                     MonoBehaviour dataComponent = _machine.GetDataComponent<TDataComponent>();
                     return property.GetValue(dataComponent);
                 });
-            }
-        }
-
-        public IEnumerable<(PropertyInfo, FsmExposeAttribute)> GetExposedProperties()
-        {
-            foreach (var property in typeof(TMachine).GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy))
-            {
-                FsmExposeAttribute attr = property.GetCustomAttribute<FsmExposeAttribute>();
-                if (attr != null)
-                {
-                    yield return (property, attr);
-                }
             }
         }
     }

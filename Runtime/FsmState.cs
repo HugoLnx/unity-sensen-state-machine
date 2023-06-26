@@ -9,6 +9,7 @@ namespace SensenToolkit.StateMachine
         public bool IsEntering { get; private set; }
         public bool IsExiting { get; private set; }
         public bool IsCurrent { get; private set; }
+        [FsmExpose] public bool HasAskedToExit { get; private set; }
 
         public void Boot()
         {
@@ -24,12 +25,18 @@ namespace SensenToolkit.StateMachine
         }
         public void Exit()
         {
+            HasAskedToExit = false;
             this.IsExiting = true;
             OnExit();
             this.enabled = false;
             this.IsExiting = false;
             this.IsCurrent = false;
         }
+        protected void AskToExit()
+        {
+            HasAskedToExit = true;
+        }
+
         protected virtual void OnEnter()
         {}
 
