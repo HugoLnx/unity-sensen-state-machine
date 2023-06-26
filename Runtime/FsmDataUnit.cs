@@ -10,7 +10,7 @@ namespace SensenToolkit.StateMachine
     where TMachine : FsmMachine
     where TDataComponent : MonoBehaviour
     {
-        private TMachine _machine;
+        protected TMachine _machine;
         protected override void Definition()
         {
             Type dataType = typeof(TDataComponent);

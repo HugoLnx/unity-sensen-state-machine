@@ -11,6 +11,7 @@ namespace SensenToolkit.StateMachine
     public abstract class FsmMachine : MonoBehaviour
     {
         public FsmState CurrentState { get; private set; }
+        public bool CurrentStateHasAskedToExit => CurrentState?.HasAskedToExit == true;
         private Dictionary<Type, FsmState> _states;
         private Dictionary<Type, FsmState> States
             => _states ??= GetStates();
